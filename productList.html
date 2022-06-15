@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stok Takip Sistemi</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css">
+
+  <style>
+    #cıkıs {
+      position: absolute;
+      right: 0px;
+      bottom: 18px;
+    }
+
+    i {
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <nav class="darkbar">
+          <div class="col-md-8 flu">
+            <a class="navbar-brand" href="#" style="color:white">StokTakip</a>
+          </div>          
+        </nav>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <table class="table">
+          <thead id="thead">
+            <th>ID</th>
+            <th>Kategori Adı</th>
+            <th>Ürün Adı</th>
+            <th>Fiyat</th>
+            <th>Stok Adedi</th>
+            <th>Açıklama</th>
+          </thead>
+          <tbody id="tbbody">
+          </tbody>
+        </table>
+
+        <button class="btn btn-primary" id="btnProductPage">Ürün Ekle -->></button>
+        <button class="btn btn-primary" id="refresh">Yenile -->></button>
+
+        <br><br>
+        <div class="form-group">
+          <label for="exampleInputEmail1">İşlem Yapılan Ürünün Id numarasını girin: </label>
+          <input type="text" class="form-control" id="urunId" placeholder="ID Girin">
+        </div>
+        <div class="form-check">
+          <input type="radio" class="form-check-input" name="urunIslem" id="urunGuncelle">
+          <label class="form-check-label">Ürün Güncelle</label>
+        </div>
+        <div class="form-check">
+          <input type="radio" class="form-check-input" name="urunIslem" id="urunSil">
+          <label class="form-check-label">Ürünü Sil</label>
+        </div>
+        <button id="islemyapBtn" class="btn btn-success">İşlem Yap</button>
+        <br><br>
+        
+
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+
+    var urunSil = document.getElementById('urunSil');//radio
+    var urunGuncelle = document.getElementById('urunGuncelle');//radio
+    var islemyapBtn = document.getElementById('islemyapBtn');
+    var urunId = document.getElementById('urunId');//işlem yapılacak ürünün id bilgisini giriyoruz
+
+
+    //Veri tabanında gelen verileri yazdırmak için id üzerinden inputlar alındı
+    var urun_adi = document.getElementById('urun_adi');
+    var kategori_adi = document.getElementById('kategori_adi');
+    var fiyat = document.getElementById('fiyat');
+    var stok = document.getElementById('stok');
+    var aciklama = document.getElementById('aciklama');
+    var tbbody = document.getElementById('tbbody');
+    var tr = document.createElement("tr");
+
+
+    window.onload = function () {
+      //Burada veri tabanından gelen veriler products değişkenine ipcRenderer.on fonksiyonu ile alındı.Ve foreach ile listeleme sağlandı
+      ipcRenderer.on('products', (e, products) => {
+        var i = 0;
+        var dizi = [1, 2, 3, 4, 5, 6, 7, 10, 8, 98, 8525, 78];
+        dizi.forEach(urunListele);
+        function urunListele() {
+          tr = document.createElement("tr");
+          tr.innerHTML = "<td>" + products[i]["id"] + "<td>" + products[i]["category_name"] + "</td>" +
+            "<td>" + products[i]["product_name"] + "</td>" + "<td>" + products[i]["price"] + "</td>" +
+            "<td>" + products[i]["stock"] + "</td>" + "<td>" + products[i]["description"] + "</td>"
+          i++;
+          // Append to body:
+          tbbody.appendChild(tr);
+        }
+      })
+
+      //Ürün ekleme sayfasına geçiş 
+      var btnProductPage = document.getElementById('btnProductPage');
+      btnProductPage.onclick = function () {
+        ipcRenderer.invoke('productListAdd');
+      }
+
+
+      //işlem yap butonuna tıkaldıktan sonra seçilen işleme göre ürün silinir veya güncelleme sayfasına yönlendirilir
+      islemyapBtn.onclick = function () {
+        if (urunId.value != "") {
+          if (urunSil.checked == true) {
+            ipcRenderer.invoke('urunSil', urunId.value);       
+                
+          } else if (urunGuncelle.checked == true) {//ürün güncelleme sayfasına geçiş ve girilen id değerinide sayfaya gönderdik
+            ipcRenderer.invoke('urunGuncelleSayfasi', urunId.value);
+          } else {
+            alert('Lütfen işlem seçiniz');
+          }
+        } else {
+          alert('Lütfen işlem yapılcak ürünün id numarasını giriniz!!!!');
+        }
+        
+
+      }
+      var refreshBtn= document.getElementById("refresh");
+      refreshBtn.onclick= function(){
+        ipcRenderer.invoke('productAddList');
+      }
+    }
+
+  </script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
